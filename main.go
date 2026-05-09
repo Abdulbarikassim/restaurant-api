@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -84,16 +85,16 @@ func main() {
 	// menu routes
 
 	router.GET("/menu", getMenuItems)
-	//router.GET("/menu/:id", getMenuById)
+	router.GET("/menu/:id", getMenuItemById)
 	router.PUT("/menu/:id", updateMenuItem)
 	router.POST("/menu",createMenuItem )
 
 
 	// order routes
 
-	//router.GET("/orders", getOrders)
+	router.GET("/orders", getOrders)
 	//router.GET("/orders/:id", getOrderById)
-	//router.POST("/orders", postNewOrder)
+	//router.POST("/orders", createNewOrder)
 	//router.PUT("/order/:id/status",updateOrderStatus)
 
 	router.Run(":8080")
@@ -200,13 +201,19 @@ func updateMenuItem(c *gin.Context) {
 	query := `
 		UPDATE menu_items
 		SET
-			price = $1,
-			available = $2
-		WHERE id = $3
+			name = $1,
+			description = $2,
+			category = $3,
+			price = $4,
+			available = $5
+		WHERE id = $6
 	`
 
 	_, err := database.Exec(
 		query,
+		item.Name,
+		item.Description,
+		item.Category,
 		item.Price,
 		item.Available,
 		id,
@@ -228,7 +235,7 @@ func updateMenuItem(c *gin.Context) {
 
 // getMenuById function
 
-func getMenuById(c *gin.Context){
+func getMenuItemById(c *gin.Context){
 
 	id := c.Param("id")
 
@@ -268,7 +275,63 @@ func getMenuById(c *gin.Context){
 
 
 
+// Order Processing logic
 
+// getOrders function gets all the orders
 
+func getOrders(c *gin.Context) {
 
+	// query the database
+
+	query := `
+		SELECT
+			id,
+			customer_phone,
+			status,
+			total_amount,
+			items
+		FROM orders
+		ORDER BY created_at DESC
+	`
+
+	rows , err := database.Query(query)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+
+		return
+	}
+
+	defer rows.Close()
+
+	// loop through the database and copy the data in the order struct.
+
+	var orders []Order
+	for rows.Next() {
+
+		var order Order
+
+		var itemJSON []byte
+
+		err := rows.Scan(
+			&order.ID,
+			&order.CustomerPhone,
+			&order.Status,
+			&order.TotalAmount,
+			&itemJSON,
+		)
+
+		if err != nil {
+			continue
+		}
+
+		json.Unmarshal(itemJSON, &order.Items)
+
+		orders = append(orders, order)
+	}
+
+	c.JSON(http.StatusOK,orders)
+}
 
