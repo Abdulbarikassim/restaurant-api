@@ -18,31 +18,31 @@ import (
 // menu item
 
 type MenuItem struct {
-	ID int `json:"id"`
-	Name string `json:"name"`
-	Description string `json:"description"`
-	Category string `json:"category"`
-	Price float64 `json:"price"`
-	Available bool `json:"available"`
+	ID          int     `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Category    string  `json:"category"`
+	Price       float64 `json:"price"`
+	Available   bool    `json:"available"`
 }
 
 // order Item
 
 type OrderItem struct {
-	MenuItemId int `json:"menu_item_id"`
-	Name string `json:"name"`
-	Quantity int `json:"quantity"`
-	Price float64 `json:"price"`
+	MenuItemId int     `json:"menu_item_id"`
+	Name       string  `json:"name"`
+	Quantity   int     `json:"quantity"`
+	Price      float64 `json:"price"`
 }
 
 // All the order items
 
 type Order struct {
-	ID 	string `json:"id"`
-	CustomerPhone string `json:"customer_phone"`
-	Status string `json:"status"`
-	TotalAmount float64 `json:"total_amount"`
-	Items []OrderItem 	`json:"items"`
+	ID            string      `json:"id"`
+	CustomerPhone string      `json:"customer_phone"`
+	Status        string      `json:"status"`
+	TotalAmount   float64     `json:"total_amount"`
+	Items         []OrderItem `json:"items"`
 }
 
 var database *sql.DB
@@ -79,7 +79,6 @@ func main() {
 
 	fmt.Println("App is running")
 
-
 	router := gin.Default()
 
 	// menu routes
@@ -87,22 +86,18 @@ func main() {
 	router.GET("/menu", getMenuItems)
 	router.GET("/menu/:id", getMenuItemById)
 	router.PUT("/menu/:id", updateMenuItem)
-	router.POST("/menu",createMenuItem )
-
+	router.POST("/menu", createMenuItem)
 
 	// order routes
 
 	router.GET("/orders", getOrders)
-	//router.GET("/orders/:id", getOrderById)
-	//router.POST("/orders", createNewOrder)
-	//router.PUT("/order/:id/status",updateOrderStatus)
+	router.GET("/orders/:id", getOrderById)
+	router.POST("/orders", createNewOrder)
+	router.PUT("/order/:id/status", updateOrderStatus)
 
 	router.Run(":8080")
 
-
-
 }
-
 
 // logic to get menu items
 
@@ -137,7 +132,7 @@ func getMenuItems(c *gin.Context) {
 			continue
 		}
 
-		items =  append(items, item)
+		items = append(items, item)
 	}
 
 	c.JSON(http.StatusOK, items)
@@ -146,14 +141,12 @@ func getMenuItems(c *gin.Context) {
 func createMenuItem(c *gin.Context) {
 	var item MenuItem
 
-
-	if err  := c.ShouldBindJSON(&item); err != nil {
+	if err := c.ShouldBindJSON(&item); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
-
 
 	query := `
 		INSERT INTO menu_items
@@ -172,8 +165,8 @@ func createMenuItem(c *gin.Context) {
 	).Scan(&item.ID)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError,gin.H{
-			"error" : err.Error(),
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
 		})
 		return
 	}
@@ -182,7 +175,6 @@ func createMenuItem(c *gin.Context) {
 }
 
 // logic to update MenuItem
-
 
 func updateMenuItem(c *gin.Context) {
 
@@ -232,10 +224,9 @@ func updateMenuItem(c *gin.Context) {
 
 }
 
-
 // getMenuById function
 
-func getMenuItemById(c *gin.Context){
+func getMenuItemById(c *gin.Context) {
 
 	id := c.Param("id")
 
@@ -256,24 +247,22 @@ func getMenuItemById(c *gin.Context){
 
 	if err != nil {
 
-		if err == sql.ErrNoRows{
-			c.JSON(http.StatusNotFound,gin.H{
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{
 				"error": "menu item not found",
 			})
 
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError,gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK,item)
+	c.JSON(http.StatusOK, item)
 }
-
-
 
 // Order Processing logic
 
@@ -294,7 +283,7 @@ func getOrders(c *gin.Context) {
 		ORDER BY created_at DESC
 	`
 
-	rows , err := database.Query(query)
+	rows, err := database.Query(query)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -332,6 +321,113 @@ func getOrders(c *gin.Context) {
 		orders = append(orders, order)
 	}
 
-	c.JSON(http.StatusOK,orders)
+	c.JSON(http.StatusOK, orders)
 }
 
+// create new order function.
+
+func createNewOrder(c *gin.Context) {
+
+	var order Order
+
+	if err := c.BindJSON(&order); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// calculate total
+	var totalAmount float64
+
+	for _, item := range order.Items {
+		totalAmount += item.Price * float64(item.Quantity)
+	}
+
+	// convert items -> JSONB
+	itemsJSON, err := json.Marshal(order.Items)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	_, err = database.Exec(`
+		INSERT INTO orders
+		(customer_phone, status, total_amount, items)
+		VALUES ($1, $2, $3, $4)
+	`,
+		order.CustomerPhone,
+		"received",
+		totalAmount,
+		itemsJSON,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "order created successfully",
+		"total_amount": totalAmount,
+	})
+}
+
+// getOrderById function.
+func getOrderById(c *gin.Context) {
+
+	id := c.Param("id")
+
+	row := database.QueryRow(`
+		SELECT * FROM orders WHERE id = $1
+	`, id)
+
+	var order Order
+
+	var itemJSON []byte
+
+	err := row.Scan(
+		&order.ID,
+		&order.CustomerPhone,
+		&order.Status,
+		&order.TotalAmount,
+		&itemJSON,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "order not found",
+		})
+		return
+	}
+
+	json.Unmarshal(itemJSON, &order.Items)
+
+	c.JSON(http.StatusOK, order)
+}
+
+// updateOrderStatus function.
+func updateOrderStatus(c *gin.Context) {
+	id := c.Param("id")
+	status := c.PostForm("status")
+
+	_, err := database.Exec(`
+		UPDATE orders SET status = $1 WHERE id = $2
+	`, status, id)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "order status updated successfully",
+	})
+}
