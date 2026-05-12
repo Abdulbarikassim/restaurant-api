@@ -495,3 +495,51 @@ func getOrderById(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 
+// update status
+
+func updateOrderStatus(c *gin.Context) {
+	id := c.Param("id")
+
+	var req struct{
+		Status string `json:"status"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	validate := map[string]bool {
+		"received": true ,
+		"preparing": true,
+		"completed": true,
+		"cancelled": true,
+	}
+
+	if !validate[req.Status] {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid status",
+		})
+		return
+	}
+
+	_, err := database.Exec(`
+	UPDATE orders SET status = $1 WHERE id = $2
+	`, req.Status,id)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// response
+	c.JSON(http.StatusOK, gin.H{
+		"message": "order status updated successfully",
+	})
+
+
+}
