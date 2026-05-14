@@ -40,7 +40,15 @@ This API handles menu management, order processing, and order status tracking wi
 restaurant-api/
 │
 ├── db/                  # Database connection logic
-│   └── database.go
+│   └── postgres.go
+│├── models/                  #  models
+│    └── menu.go
+     └── order.go
+│├── handlers/                  # handler for the project logic
+│   └── menu_handler.go
+│   └── order_handler.go
+│├── routes/                  # all routes
+│   └── routes.go
 │
 ├── main.go             # Application entry point
 ├── go.mod
