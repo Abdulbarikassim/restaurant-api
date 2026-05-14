@@ -66,7 +66,7 @@ git clone https://github.com/Abdulbarikassim/restaurant-api.git
 cd restaurant-api
 ```
 
-2. Installation dependecies
+2. Instaling dependecies
 ```
 go mody tidy
 ```
