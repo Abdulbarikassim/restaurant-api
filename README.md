@@ -59,7 +59,9 @@ cd restaurant-api
 ```
 
 2. Installation dependecies
+```
 go mody tidy
+```
 
 ## API Endpoint
 
@@ -68,23 +70,14 @@ For this project, below are the API endpoint:
 | Method | Endpoint | Description |
 
 |---|---|---|
-
 | GET | `/menu` | Get all menu items |
-
 | GET | `/menu/:id` | Get menu item by ID |
-
 | POST | `/menu` | Create menu item |
-
 | PUT | `/menu/:id` | Update menu item |
-
 | DELETE | `/menu/:id` | Delete menu item |
-
 | GET | `/orders` | Get all orders |
-
 | GET | `/orders/:id` | Get order by ID |
-
 | POST | `/orders` | Create new order |
-
 | PUT | `/order/:id/status` | Update order status |
 
 
