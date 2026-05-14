@@ -1,4 +1,4 @@
-#  Restaurant API
+#  Restaurant Management API
 
 A RESTful backend API built with Go (Gin framework) and PostgreSQL for managing restaurant menu items and customer orders.
 
