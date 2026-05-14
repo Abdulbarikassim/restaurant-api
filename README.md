@@ -36,7 +36,7 @@ This API handles menu management, order processing, and order status tracking wi
 ---
 
 ## 📁 Project Structure
-
+```
 restaurant-api/
 │
 ├── db/                  # Database connection logic
@@ -47,7 +47,7 @@ restaurant-api/
 ├── go.sum
 ├── .env
 └── README.md
-
+```
 ## Installation & set up
 
 1.Clone the repository
@@ -67,17 +67,14 @@ go mody tidy
 
 For this project, below are the API endpoint:
 
-| Method | Endpoint | Description |
-
-|---|---|---|
-| GET | `/menu` | Get all menu items |
-| GET | `/menu/:id` | Get menu item by ID |
-| POST | `/menu` | Create menu item |
-| PUT | `/menu/:id` | Update menu item |
-| DELETE | `/menu/:id` | Delete menu item |
-| GET | `/orders` | Get all orders |
-| GET | `/orders/:id` | Get order by ID |
-| POST | `/orders` | Create new order |
-| PUT | `/order/:id/status` | Update order status |
-
-
+| Method | Endpoint            | Description         |
+| ------ | ------------------- | ------------------- |
+| GET    | `/menu`             | Get all menu items  |
+| GET    | `/menu/:id`         | Get menu item by ID |
+| POST   | `/menu`             | Create menu item    |
+| PUT    | `/menu/:id`         | Update menu item    |
+| DELETE | `/menu/:id`         | Delete menu item    |
+| GET    | `/orders`           | Get all orders      |
+| GET    | `/orders/:id`       | Get order by ID     |
+| POST   | `/orders`           | Create new order    |
+| PUT    | `/order/:id/status` | Update order status |
